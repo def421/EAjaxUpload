@@ -92,6 +92,9 @@ class EAjaxUpload extends CWidget
         $bMultiUpload = isset($this->config['multi']) && $this->config['multi'];
         unset($this->config['multi']);
 
+        $html= '<div id="' . $this->id . '">
+                    <noscript><p>Please enable JavaScript to use file uploader.</p></noscript>';
+        $html .= '</div>';
 
         if (!empty($this->config['model'])) {
             $model = $this->config['model'];
@@ -121,27 +124,31 @@ class EAjaxUpload extends CWidget
                         " . $onCompleteFunction . ";
                         completeCallback();
                     }";
+            } else {
+                $fieldName = get_class($model) . '[' . $property . ']';
+                $this->config['onComplete'] = "js:function(id, fileName, responseJSON){
 
-
-                $html= '<div id="' . $this->id . '">
-                    <noscript><p>Please enable JavaScript to use file uploader.</p></noscript>';
-                $html .= '</div>';
-
-
-                //@todo
-                $arrFiles = $model->getImagesPaths($property);
-
-                if (count($arrFiles) > 0) {
-                    foreach ($arrFiles as $key => $image) {
-                        $html .= "<input type=\"hidden\" id=\"" . $fieldID . "_" . $key . "\" name=\"" . $fieldName . "\" value=\"" . $image['filename'] . "\">";
-                        $html .= '<img id="'. $fieldID . "_" . $key .'_image" src="' . $image["adminpreview"] . '"> <a href="#" id="jsDelAvatar_' . $key . '" onClick="$(\'#' . $fieldID . "_" . $key . '\').val(\'\'); $(\'#'. $fieldID . "_" . $key .'_image\').attr(\'src\', \'\'); $(\'#jsDelAvatar_' . $key . '\').remove();  return false;">Удалить</a>';
-                    }
-                }
-
-
+                        if ($('#" . $fieldID . "_' + 0).length == 0) {
+                            var newField = '<input type=\"hidden\" id=\"" . $fieldID . "_' + 0 +  '\" name=\"" . $fieldName . "\" value=\"\">';
+                            $('#" . $this->id . "').append($(newField));
+                        }
+                        if ($('#" . $this->id  . "').find('.qq-upload-list li').length > 1) {
+                             $('#" . $this->id  . "').find('.qq-upload-list li:first').remove();
+                        }
+                        $('#" . $fieldID . "_' + 0).val(responseJSON.filename);
+                        " . $onCompleteFunction . ";
+                        completeCallback();
+                    }";
             }
 
+            $arrFiles = $model->getImagesPaths($property);
 
+            if (count($arrFiles) > 0) {
+                foreach ($arrFiles as $key => $image) {
+                    $html .= "<input type=\"hidden\" id=\"" . $fieldID . "_" . $key . "\" name=\"" . $fieldName . "\" value=\"" . $image['filename'] . "\">";
+                    $html .= '<img id="'. $fieldID . "_" . $key .'_image" src="' . $image["adminpreview"] . '"> <a href="#" id="jsDelAvatar_' . $key . '" onClick="$(\'#' . $fieldID . "_" . $key . '\').val(\'\'); $(\'#'. $fieldID . "_" . $key .'_image\').attr(\'src\', \'\'); $(\'#jsDelAvatar_' . $key . '\').remove();  return false;">Удалить</a>';
+                }
+            }
 
         }
 
