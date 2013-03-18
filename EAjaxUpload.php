@@ -97,59 +97,7 @@ class EAjaxUpload extends CWidget
         $html .= '</div>';
 
         if (!empty($this->config['model'])) {
-            $model = $this->config['model'];
-            unset($this->config['model']);
-            if ($model != null && empty($this->config['property'])) {
-                throw new CException('EAjaxUpload: param "property" cannot be empty if param "model" exist.');
-            }
-
-            $property = $this->config['property'];
-            unset($this->config['property']);
-
-            $onCompleteFunction = 'var completeCallback = function(){};';
-            if (!empty($this->config['onComplete'])) {
-                $onCompleteFunction = 'var completeCallback = ' . $this->config['onComplete'];
-            }
-
-            $fieldID = get_class($model) . '_' . $property;
-            if ($bMultiUpload) {
-                $fieldName = get_class($model) . '[' . $property . '][]';
-                $this->config['onComplete'] = "js:function(id, fileName, responseJSON){
-                        var countImages = $(\"input[id^='" . $fieldID . "_']\").length;
-                        if ($('#" . $fieldID . "_' + (countImages + id)).length == 0) {
-                            var newField = '<input type=\"hidden\" id=\"" . $fieldID . "_' + countImages +  '\" name=\"" . $fieldName . "\" value=\"\">';
-                            $('#" . $this->id . "').append($(newField));
-                        }
-                        $('#" . $fieldID . "_' + countImages).val(responseJSON.filename);
-                        " . $onCompleteFunction . ";
-                        completeCallback();
-                    }";
-            } else {
-                $fieldName = get_class($model) . '[' . $property . ']';
-                $this->config['onComplete'] = "js:function(id, fileName, responseJSON){
-
-                        if ($('#" . $fieldID . "_' + 0).length == 0) {
-                            var newField = '<input type=\"hidden\" id=\"" . $fieldID . "_' + 0 +  '\" name=\"" . $fieldName . "\" value=\"\">';
-                            $('#" . $this->id . "').append($(newField));
-                        }
-                        if ($('#" . $this->id  . "').find('.qq-upload-list li').length > 1) {
-                             $('#" . $this->id  . "').find('.qq-upload-list li:first').remove();
-                        }
-                        $('#" . $fieldID . "_' + 0).val(responseJSON.filename);
-                        " . $onCompleteFunction . ";
-                        completeCallback();
-                    }";
-            }
-
-            $arrFiles = $model->getImagesPaths($property);
-
-            if (count($arrFiles) > 0) {
-                foreach ($arrFiles as $key => $image) {
-                    $html .= "<input type=\"hidden\" id=\"" . $fieldID . "_" . $key . "\" name=\"" . $fieldName . "\" value=\"" . $image['filename'] . "\">";
-                    $html .= '<img id="'. $fieldID . "_" . $key .'_image" src="' . $image["adminpreview"] . '"> <a href="#" id="jsDelAvatar_' . $key . '" onClick="$(\'#' . $fieldID . "_" . $key . '\').val(\'\'); $(\'#'. $fieldID . "_" . $key .'_image\').attr(\'src\', \'\'); $(\'#jsDelAvatar_' . $key . '\').remove();  return false;">Удалить</a>';
-                }
-            }
-
+            $html .= $this->__prepareImage($bMultiUpload);
         }
 
         echo $html;
@@ -179,6 +127,102 @@ class EAjaxUpload extends CWidget
         $config = CJavaScript::encode($config);
 
         Yii::app()->getClientScript()->registerScript("FileUploader_" . $this->id, "var FileUploader_" . $this->id . " = new qq.FileUploader($config); ", CClientScript::POS_LOAD);
+    }
+
+
+    /**
+     *
+     * @param $bMultiUpload
+     * @return string
+     * @throws CException
+     */
+    protected function __prepareImage($bMultiUpload)
+    {
+        $model = $this->config['model'];
+        unset($this->config['model']);
+        if ($model != null && empty($this->config['property'])) {
+            throw new CException('EAjaxUpload: param "property" cannot be empty if param "model" exist.');
+        }
+
+        $property = $this->config['property'];
+        unset($this->config['property']);
+
+        $onCompleteFunction = 'var completeCallback = function(){};';
+        if (!empty($this->config['onComplete'])) {
+            $onCompleteFunction = 'var completeCallback = ' . $this->config['onComplete'];
+        }
+
+        $fieldID = get_class($model) . '_' . $property;
+
+        if ($bMultiUpload) {
+            $fieldName = $this->__prepareMultiImage($model, $property, $fieldID, $onCompleteFunction);
+        } else {
+            $fieldName = $this->__prepareSingleImage($model, $property, $fieldID, $onCompleteFunction);
+        }
+
+        $arrFiles = $model->getImagesPaths($property);
+
+        $html = '';
+        if (count($arrFiles) > 0) {
+            foreach ($arrFiles as $key => $image) {
+                $html .= "<input type=\"hidden\" id=\"" . $fieldID . "_" . $key . "\" name=\"" . $fieldName . "\" value=\"" . $image['filename'] . "\">";
+                $html .= '<img id="'. $fieldID . "_" . $key .'_image" src="' . $image["adminpreview"] . '"> <a href="#" id="jsDelAvatar_' . $key . '" onClick="$(\'#' . $fieldID . "_" . $key . '\').val(\'\'); $(\'#'. $fieldID . "_" . $key .'_image\').attr(\'src\', \'\'); $(\'#jsDelAvatar_' . $key . '\').remove();  return false;">Удалить</a>';
+            }
+        }
+
+        return $html;
+    }
+
+    /**
+     * @param $model
+     * @param $property
+     * @param $fieldID
+     * @param $onCompleteFunction
+     * @return string
+     */
+    protected function __prepareSingleImage($model, $property, $fieldID, $onCompleteFunction)
+    {
+        $fieldName = get_class($model) . '[' . $property . ']';
+        $this->config['onComplete'] = "js:function(id, fileName, responseJSON){
+
+            if ($('#" . $fieldID . "_' + 0).length == 0) {
+                var newField = '<input type=\"hidden\" id=\"" . $fieldID . "_' + 0 +  '\" name=\"" . $fieldName . "\" value=\"\">';
+                $('#" . $this->id . "').append($(newField));
+            }
+            if ($('#" . $this->id  . "').find('.qq-upload-list li').length > 1) {
+                 $('#" . $this->id  . "').find('.qq-upload-list li:first').remove();
+            }
+            $('#" . $fieldID . "_' + 0).val(responseJSON.filename);
+            " . $onCompleteFunction . ";
+            completeCallback();
+        }";
+
+        return $fieldName;
+    }
+
+
+    /**
+     * @param $model
+     * @param $property
+     * @param $fieldID
+     * @param $onCompleteFunction
+     * @return string
+     */
+    protected function __prepareMultiImage($model, $property, $fieldID, $onCompleteFunction)
+    {
+        $fieldName = get_class($model) . '[' . $property . '][]';
+        $this->config['onComplete'] = "js:function(id, fileName, responseJSON){
+            var countImages = $(\"input[id^='" . $fieldID . "_']\").length;
+            if ($('#" . $fieldID . "_' + (countImages + id)).length == 0) {
+                var newField = '<input type=\"hidden\" id=\"" . $fieldID . "_' + countImages +  '\" name=\"" . $fieldName . "\" value=\"\">';
+                $('#" . $this->id . "').append($(newField));
+            }
+            $('#" . $fieldID . "_' + countImages).val(responseJSON.filename);
+            " . $onCompleteFunction . ";
+            completeCallback();
+        }";
+
+        return $fieldName;
     }
 
 
