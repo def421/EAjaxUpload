@@ -89,14 +89,15 @@ class EAjaxUpload extends CWidget
             throw new CException('EAjaxUpload: param "sizeLimit" cannot be empty.');
         }
 
-        $bMultiUpload = isset($this->config['multi']) && $this->config['multi'];
-        unset($this->config['multi']);
+
 
         $html= '<div id="' . $this->id . '">
                     <noscript><p>Please enable JavaScript to use file uploader.</p></noscript>';
         $html .= '</div>';
 
         if (!empty($this->config['model'])) {
+            $bMultiUpload = isset($this->config['multi']) && $this->config['multi'];
+            unset($this->config['multi']);
             $html .= $this->__prepareImage($bMultiUpload);
         }
 
