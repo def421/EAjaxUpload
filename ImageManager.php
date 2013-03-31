@@ -5,7 +5,7 @@ trait ImageManager
     /**
      * Сохраняет все изображения объявленные в модели и переданные в модель
      */
-    protected function _prepareImages($isNewRecord)
+    public function _prepareImages($isNewRecord)
     {
 
         $oldModel = null;
