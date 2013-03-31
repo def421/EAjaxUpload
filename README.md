@@ -89,7 +89,7 @@ in model:
  */
 
 Yii::import('FileUpload.ImageManager');
-class User extends ActiveRecord
+class User extends ActiveRecord implements Uploadable
 {
     use ImageManager;
 
@@ -127,6 +127,23 @@ class User extends ActiveRecord
 //                    'folder' => 'users/avatar2/'
 //                )
     );
+
+
+
+        /**
+         * befor save callback
+         *
+         * @return bool
+         */
+        public function beforeSave()
+        {
+
+            if ($this instanceof Uploadable) {
+                $this->_prepareImages($this->getIsNewRecord());
+            }
+
+           return true;
+        }
 
 /*you code*/
 }

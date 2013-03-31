@@ -1,5 +1,5 @@
 <?php
-interface Uploadeble
+interface Uploadable
 {
 
     /**
