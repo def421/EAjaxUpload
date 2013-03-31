@@ -167,7 +167,7 @@ class EAjaxUpload extends CWidget
         if (count($arrFiles) > 0) {
             foreach ($arrFiles as $key => $image) {
                 $html .= "<input type=\"hidden\" id=\"" . $fieldID . "_" . $key . "\" name=\"" . $fieldName . "\" value=\"" . $image['filename'] . "\">";
-                $html .= '<img id="'. $fieldID . "_" . $key .'_image" src="' . $image["adminpreview"] . '"> <a href="#" id="jsDelAvatar_' . $key . '" onClick="$(\'#' . $fieldID . "_" . $key . '\').val(\'\'); $(\'#'. $fieldID . "_" . $key .'_image\').attr(\'src\', \'\'); $(\'#jsDelAvatar_' . $key . '\').remove();  return false;">Удалить</a>';
+                $html .= '<img id="'. $fieldID . "_" . $key .'_image" src="' . $image["adminpreview"] . '"> <a href="#" id="jsDelAvatar_' . $key . '" style="margin-top: -20px; margin-left: -5px" class="icon-remove-circle" onClick="$(\'#' . $fieldID . "_" . $key . '\').val(\'\'); $(\'#'. $fieldID . "_" . $key .'_image\').attr(\'src\', \'\'); $(\'#jsDelAvatar_' . $key . '\').remove();  return false;"></a>';
             }
         }
 

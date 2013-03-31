@@ -5,60 +5,62 @@ trait ImageManager
     /**
      * Сохраняет все изображения объявленные в модели и переданные в модель
      */
-    protected function _prepareImages()
+    protected function _prepareImages($isNewRecord)
     {
-        $primaryKey = $this->getPrimaryKey();
+
         $oldModel = null;
-        if ($primaryKey != null) {
-            $oldModel = $this->findByPk($primaryKey);
+        if (!$isNewRecord) {
+            $oldModel = $this->findByPk($this->getPrimaryKey());
         }
+
         if (count($this->_images) > 0) {
             foreach ($this->_images as $property => $imageProperties) {
                 $bResave = $oldModel !== null && $oldModel->$property != $this->$property;
+                $arrImageName = $this->$property;
 
+                if (!is_array($arrImageName)) {
+                    $arrImageName = array($arrImageName);
+                }
+
+                $arrOdImageFilenames = array();
                 if ($bResave) {
-
-                    $arrImageName = $this->$property;
-                    if (!is_array($arrImageName)) {
-                        $arrImageName = array($arrImageName);
-                    }
-
                     $arrOdImageFilenames = explode(';', (string) $oldModel->$property);
                     if (!is_array($arrOdImageFilenames)) {
                         $arrOdImageFilenames = array($arrOdImageFilenames);
                     }
+                }
 
-
-                    // сохраняем новые
-                    $values = array();
-                    foreach ($arrImageName as  $imageFilename) {
-                        if (in_array($imageFilename, $arrOdImageFilenames)) {
-                            $imageID = array_search($imageFilename, $arrOdImageFilenames);
-                            $values[] = $arrOdImageFilenames[$imageID];
-                            unset($arrOdImageFilenames[$imageID]);
-                        } else {
-                            $values[] = $this->_saveImage($imageFilename, $imageProperties);
-                        }
-                    }
-
-                    $values = array_filter(
-                        $values,
-                        function($element) {
-                            return !empty($element);
-                        }
-                    );
-
-                    $this->$property = implode(";", $values);
-
-
-                    //var_dump($arrOdImageFilenames);exit;
-                    //удаляем старые которые удалил пользователь
-                    if (count($arrOdImageFilenames) > 0) {
-                        foreach ($arrOdImageFilenames as $oldFilename) {
-                            $this->_deleteImage($oldFilename, $imageProperties);
-                        }
+                // сохраняем новые
+                $values = array();
+                foreach ($arrImageName as  $imageFilename) {
+                    if (in_array($imageFilename, $arrOdImageFilenames)) {
+                        $imageID = array_search($imageFilename, $arrOdImageFilenames);
+                        $values[] = $arrOdImageFilenames[$imageID];
+                        unset($arrOdImageFilenames[$imageID]);
+                    } else {
+                        $values[] = $this->_saveImage($imageFilename, $imageProperties);
                     }
                 }
+
+                $values = array_filter(
+                    $values,
+                    function($element) {
+                        return !empty($element);
+                    }
+                );
+
+
+                $this->$property = implode(";", $values);
+
+
+                //var_dump($arrOdImageFilenames);exit;
+                //удаляем старые которые удалил пользователь
+                if (count($arrOdImageFilenames) > 0) {
+                    foreach ($arrOdImageFilenames as $oldFilename) {
+                        $this->_deleteImage($oldFilename, $imageProperties);
+                    }
+                }
+
 
             }
         }
